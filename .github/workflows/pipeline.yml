@@ -51,14 +51,14 @@ jobs:
     
   update-gitops:
     needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-lates
     
     steps:
     - uses: actions/checkout@v3
       with:
         repository: ${{ secrets.GITOPS_REPO }}
         token: ${{ secrets.PAT_TOKEN }}
+        ref: 'main'
         path: gitops-repo
     
     - name: Update image tag
