@@ -61,17 +61,46 @@ jobs:
         ref: 'main'
         path: gitops-repo
     
-    - name: Update image tag
+    - name: Update image tag if changed
+      id: update-tag
       run: |
-        cd gitops-repo
-        # Update the image tag in the kustomization file
-        sed -i 's|newTag:.*|newTag: latest|g' overlays/production/kustomization.yaml
+        cd gitops-repo/overlays/production
+        
+        # Get current values
+        CURRENT_IMAGE=$(yq eval '.images[0].newName' kustomization.yaml)
+        CURRENT_TAG=$(yq eval '.images[0].newTag' kustomization.yaml)
+        DESIRED_IMAGE="${{ secrets.DOCKER_USERNAME }}/flask-app"
+        DESIRED_TAG="${{ github.sha }}"
+        
+        echo "Current: $CURRENT_IMAGE:$CURRENT_TAG"
+        echo "Desired: $DESIRED_IMAGE:$DESIRED_TAG"
+        
+        # Check if update is needed
+        if [ "$CURRENT_IMAGE" != "$DESIRED_IMAGE" ] || [ "$CURRENT_TAG" != "$DESIRED_TAG" ]; then
+          yq eval ".images[0].newName = \"$DESIRED_IMAGE\"" -i kustomization.yaml
+          yq eval ".images[0].newTag = \"$DESIRED_TAG\"" -i kustomization.yaml
+          echo "::set-output name=changes_made::true"
+          echo "✅ Updated kustomization.yaml"
+        else
+          echo "::set-output name=changes_made::false"
+          echo "✅ No changes needed"
+        fi
+        
+        echo "Final content:"
+        cat kustomization.yaml
     
     - name: Commit and push changes
+      if: steps.update-tag.outputs.changes_made == 'true'
       run: |
         cd gitops-repo
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
         git add .
-        git commit -m "Update image to latest version"
+        git commit -m "CI: Update deployment to ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}"
         git push origin main
+        echo "✅ Changes committed and pushed"
+    
+    - name: Skip commit if no changes
+      if: steps.update-tag.outputs.changes_made == 'false'
+      run: |
+        echo "✅ No changes to commit - skipping git operations"
