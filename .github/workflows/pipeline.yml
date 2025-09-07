@@ -51,7 +51,7 @@ jobs:
     
   update-gitops:
     needs: build-and-push
-    runs-on: ubuntu-lates
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v3
