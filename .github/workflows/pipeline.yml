@@ -57,7 +57,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         repository: ${{ secrets.GITOPS_REPO }}
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         ref: 'main'
         path: gitops-repo
     
