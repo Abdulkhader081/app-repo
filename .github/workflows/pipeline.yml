@@ -50,69 +50,69 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
     
   update-gitops:
-  needs: build-and-push
-  runs-on: ubuntu-latest
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout GitOps repo with deploy key
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.GITOPS_REPO }}
+        ssh-key: ${{ secrets.DEPLOY_KEY }}
+        ref: 'main'
+        path: gitops-repo
   
-  steps:
-  - name: Checkout GitOps repo with deploy key
-    uses: actions/checkout@v3
-    with:
-      repository: ${{ secrets.GITOPS_REPO }}
-      ssh-key: ${{ secrets.DEPLOY_KEY }}
-      ref: 'main'
-      path: gitops-repo
-
-  - name: Setup yq (if not already available)
-    run: |
-      sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-      sudo chmod +x /usr/local/bin/yq
-
-  - name: Update image tag if changed
-    id: update-tag
-    run: |
-      cd gitops-repo/overlays/production
-      
-      # Get current values safely
-      CURRENT_IMAGE=$(yq eval '.images[0].newName' kustomization.yaml)
-      CURRENT_TAG=$(yq eval '.images[0].newTag' kustomization.yaml)
-      DESIRED_IMAGE="${{ secrets.DOCKER_USERNAME }}/flask-app"
-      DESIRED_TAG="${{ github.sha }}"
-      
-      echo "Current: $CURRENT_IMAGE:$CURRENT_TAG"
-      echo "Desired: $DESIRED_IMAGE:$DESIRED_TAG"
-      
-      # Check if update is needed
-      if [ "$CURRENT_IMAGE" != "$DESIRED_IMAGE" ] || [ "$CURRENT_TAG" != "$DESIRED_TAG" ]; then
-        yq eval ".images[0].newName = \"$DESIRED_IMAGE\"" -i kustomization.yaml
-        yq eval ".images[0].newTag = \"$DESIRED_TAG\"" -i kustomization.yaml
-        echo "changes_made=true" >> $GITHUB_OUTPUT
-        echo "✅ Updated kustomization.yaml"
-      else
-        echo "changes_made=false" >> $GITHUB_OUTPUT
-        echo "✅ No changes needed"
-      fi
-      
-      echo "Final content:"
-      cat kustomization.yaml
-
-  - name: Configure Git for deploy key
-    if: steps.update-tag.outputs.changes_made == 'true'
-    run: |
-      cd gitops-repo
-      git config user.name "github-actions[bot]"
-      git config user.email "github-actions[bot]@users.noreply.github.com"
-      git remote set-url origin git@github.com:${{ secrets.GITOPS_REPO }}.git
-
-  - name: Commit and push changes
-    if: steps.update-tag.outputs.changes_made == 'true'
-    run: |
-      cd gitops-repo
-      git add .
-      git commit -m "CI: Update deployment to ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}"
-      git push origin main
-      echo "✅ Changes committed and pushed"
-
-  - name: Skip commit if no changes
-    if: steps.update-tag.outputs.changes_made == 'false'
-    run: |
-      echo "✅ No changes to commit - skipping git operations"
+    - name: Setup yq (if not already available)
+      run: |
+        sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        sudo chmod +x /usr/local/bin/yq
+  
+    - name: Update image tag if changed
+      id: update-tag
+      run: |
+        cd gitops-repo/overlays/production
+        
+        # Get current values safely
+        CURRENT_IMAGE=$(yq eval '.images[0].newName' kustomization.yaml)
+        CURRENT_TAG=$(yq eval '.images[0].newTag' kustomization.yaml)
+        DESIRED_IMAGE="${{ secrets.DOCKER_USERNAME }}/flask-app"
+        DESIRED_TAG="${{ github.sha }}"
+        
+        echo "Current: $CURRENT_IMAGE:$CURRENT_TAG"
+        echo "Desired: $DESIRED_IMAGE:$DESIRED_TAG"
+        
+        # Check if update is needed
+        if [ "$CURRENT_IMAGE" != "$DESIRED_IMAGE" ] || [ "$CURRENT_TAG" != "$DESIRED_TAG" ]; then
+          yq eval ".images[0].newName = \"$DESIRED_IMAGE\"" -i kustomization.yaml
+          yq eval ".images[0].newTag = \"$DESIRED_TAG\"" -i kustomization.yaml
+          echo "changes_made=true" >> $GITHUB_OUTPUT
+          echo "✅ Updated kustomization.yaml"
+        else
+          echo "changes_made=false" >> $GITHUB_OUTPUT
+          echo "✅ No changes needed"
+        fi
+        
+        echo "Final content:"
+        cat kustomization.yaml
+  
+    - name: Configure Git for deploy key
+      if: steps.update-tag.outputs.changes_made == 'true'
+      run: |
+        cd gitops-repo
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin git@github.com:${{ secrets.GITOPS_REPO }}.git
+  
+    - name: Commit and push changes
+      if: steps.update-tag.outputs.changes_made == 'true'
+      run: |
+        cd gitops-repo
+        git add .
+        git commit -m "CI: Update deployment to ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}"
+        git push origin main
+        echo "✅ Changes committed and pushed"
+  
+    - name: Skip commit if no changes
+      if: steps.update-tag.outputs.changes_made == 'false'
+      run: |
+        echo "✅ No changes to commit - skipping git operations"
