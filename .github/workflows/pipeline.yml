@@ -55,13 +55,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-  
+      
     steps:
-    - name: Clone gitops repo
-      env:
-        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+    - name: Checkout GitOps repo with deploy key
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.GITOPS_REPO }}
+        ssh-key: ${{ secrets.DEPLOY_KEY }}
+        ref: 'main'
+        path: gitops-repo
+   
+    - name: update docker tag in gitops repo
       run: |
-        git clone https://x-access-token:${GH_TOKEN}@github.com/Abdulkhader081/gitops-repo.git
         cd gitops-repo
         sed -i "s|image: .*/flask-app:.*|image: ${{ secrets.DOCKER_USERNAME }}/flask-app:${GITHUB_SHA}|g" deployment.yaml
         git config user.name "github-actions[bot]"
