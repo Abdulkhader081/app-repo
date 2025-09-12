@@ -51,7 +51,7 @@ jobs:
     
   update-gitops:
     name: Update GitOps Repo to Trigger Deployment
-    needs: build
+    needs: build-and-push
     runs-on: ubuntu-latest
   
     steps:
