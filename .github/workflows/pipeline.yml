@@ -43,9 +43,11 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Build and push
-      run: |
-        docker build -t $IMAGE_NAME:${{ github.sha }} .
-        docker push $IMAGE_NAME:${{ github.sha }}
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }} 
     
   update-gitops:
     needs: build-and-push
