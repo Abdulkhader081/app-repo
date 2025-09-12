@@ -61,7 +61,7 @@ jobs:
       run: |
         git clone https://x-access-token:${GH_TOKEN}@github.com/Abdulkhader081/gitops-repo.git
         cd gitops-repo
-        sed -i "s|image: .*/flask-app:.*|image: $IMAGE_NAME:${GITHUB_SHA}|g" /overlays/production/kustomization.yaml
+        sed -i "s|image: .*/flask-app:.*|image: $IMAGE_NAME:${GITHUB_SHA}|g" deployment.yaml
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add .
