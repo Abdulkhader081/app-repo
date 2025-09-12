@@ -74,6 +74,7 @@ jobs:
       if: steps.update-tag.outputs.changes_made == 'true'
       run: |
         cd gitops-repo
+        sed -i "s|image: .*/flask-app:.*|image: $IMAGE_NAME:${GITHUB_SHA}|g" /overlays/production/kustomization.yaml
         git add .
         git commit -m "CI: Update deployment to ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}"
         git push origin main
