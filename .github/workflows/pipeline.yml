@@ -50,7 +50,26 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }} 
     
   update-gitops:
-    needs: build-and-push
+    name: Update GitOps Repo to Trigger Deployment
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clone gitops repo
+      env:
+        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      run: |
+        git clone https://x-access-token:${GH_TOKEN}@github.com/Abdulkhader081/gitops-repo.git
+        cd gitops-repo
+        sed -i "s|image: .*/flask-app:.*|image: $IMAGE_NAME:${GITHUB_SHA}|g" /overlays/production/kustomization.yaml
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Update image tag to $IMAGE_NAME:${GITHUB_SHA} [ci skip]"
+        git push origin main
+        echo "✅ Changes committed and pushed"
+        
+    /*needs: build-and-push
     runs-on: ubuntu-latest
     
     steps:
@@ -78,4 +97,4 @@ jobs:
         git add .
         git commit -m "CI: Update deployment to ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}"
         git push origin main
-        echo "✅ Changes committed and pushed"
+        echo "✅ Changes committed and pushed"*/
