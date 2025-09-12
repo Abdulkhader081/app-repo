@@ -53,6 +53,8 @@ jobs:
     name: Update GitOps Repo to Trigger Deployment
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
   
     steps:
     - name: Clone gitops repo
