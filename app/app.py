@@ -4,10 +4,18 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return "Hello from Flask App!"
+    return """Hello from Flask App!"""
 
 @app.route('/healthz')
 def healthz():
+    return """
+    <html>
+      <head>
+        <title>Hello WORLD, This is from Flask App!</title>
+      </head>
+      </body>
+    </html>
+    """, 200
     return jsonify({"status": "healthy", "message": "Application is running"}), 200
 
 if __name__ == '__main__':
