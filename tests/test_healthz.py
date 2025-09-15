@@ -1,15 +1,13 @@
-import unittest
-from app.app import app
+from app import app
 
-class TestHealthEndpoint(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-    
-    def test_health_endpoint(self):
-        response = self.app.get('/healthz')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'healthy', response.data)
-        self.assertIn(b'status', response.data)
-
-if __name__ == '__main__':
-    unittest.main()
+def test_healthz():
+    with app.test_client() as c:
+        rv = c.get('/healthz')
+        assert rv.status_code == 200
+        # Check for key content in the HTML response
+        assert b"Md Abdul Khader" in rv.data
+        assert b"DevOps Engineer" in rv.data
+        assert b"abdulkhadermd13@gmail.com" in rv.data
+        assert b"GitHub" in rv.data
+        assert b"Professional Summary" in rv.data
+        assert b"Education" in rv.data
