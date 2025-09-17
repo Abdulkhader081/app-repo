@@ -14,7 +14,7 @@ def healthz():
         <p>Email: <a href="mailto:abdulkhadermd13@gmail.com">abdulkhadermd13@gmail.com</a></p>
         <p>Mobile: +91 8123656003 </p>
         <p>
-          <a href="https://github.com/Abdulkhader081" target="_blank">GitHub</a>
+          <a href="https://github.com/Abdulkhader081" target="https://github.com/Abdulkhader081">GitHub</a>
         </p>
 
         <h3>Professional Summary:</h3>
